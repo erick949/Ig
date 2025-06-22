@@ -31,7 +31,6 @@ const funFacts = [
   "La Torre Eiffel crece hasta 15 cm en verano por dilatación térmica."
 ];
 
-/* ---------- Componente principal ---------- */
 export default function App() {
   const [fact, setFact] = useState(funFacts[0]);
   const [isPortrait, setIsPortrait] = useState(false);
@@ -40,24 +39,77 @@ export default function App() {
   const dataArray = useRef(null);
   const detectInterval = useRef(null);
 
-  /* ---------- Detectar orientación ---------- */
+  // Cambiar dato curioso
+  const newFact = () => {
+    const next = funFacts[Math.floor(Math.random() * funFacts.length)];
+    setFact(next);
+  };
+
+  // Crear estrella
+  const spawnStar = () => {
+    const star = document.createElement("div");
+    star.className = "star";
+    star.style.left = `${Math.random() * 100}vw`;
+    star.style.top = `${Math.random() * 100}vh`;
+    document.body.appendChild(star);
+    setTimeout(() => star.remove(), 2000);
+  };
+
+  // Activar micrófono
+  const enableMic = async () => {
+    const THRESHOLD = 0.18;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioCtx.current = new (window.AudioContext || window.webkitAudioContext)();
+      const source = audioCtx.current.createMediaStreamSource(stream);
+
+      analyser.current = audioCtx.current.createAnalyser();
+      analyser.current.fftSize = 4096;
+      analyser.current.smoothingTimeConstant = 0.7;
+
+      source.connect(analyser.current);
+      const bufferLength = analyser.current.fftSize;
+      dataArray.current = new Uint8Array(bufferLength);
+
+      detectInterval.current = setInterval(() => {
+        analyser.current.getByteTimeDomainData(dataArray.current);
+        let sum = 0;
+        for (let i = 0; i < bufferLength; i++) {
+          const v = (dataArray.current[i] - 128) / 128;
+          sum += v * v;
+        }
+        const rms = Math.sqrt(sum / bufferLength);
+        if (rms > THRESHOLD) spawnStar();
+      }, 150);
+    } catch {
+      alert("No se pudo acceder al micrófono.");
+    }
+  };
+
+  // Limpieza al salir
+  useEffect(() => {
+    return () => {
+      clearInterval(detectInterval.current);
+      audioCtx.current && audioCtx.current.close();
+    };
+  }, []);
+
+  // Detectar orientación
   useEffect(() => {
     const checkOrientation = () => {
       const portrait = window.innerHeight > window.innerWidth;
       setIsPortrait(portrait);
     };
-
     checkOrientation();
     window.addEventListener("resize", checkOrientation);
     window.addEventListener("orientationchange", checkOrientation);
-
     return () => {
       window.removeEventListener("resize", checkOrientation);
       window.removeEventListener("orientationchange", checkOrientation);
     };
   }, []);
 
-  /* ---------- Pantalla completa según orientación ---------- */
+  // Pantalla completa automática en horizontal
   useEffect(() => {
     const enterFS = async () => {
       try {
@@ -67,14 +119,12 @@ export default function App() {
         }
       } catch (_) {}
     };
-
     const exitFS = () => {
       if (document.fullscreenElement) {
         document.exitFullscreen();
         document.body.classList.remove("fs-lock");
       }
     };
-
     if (isPortrait) {
       exitFS();
     } else {
@@ -82,7 +132,7 @@ export default function App() {
     }
   }, [isPortrait]);
 
-  /* ---------- Salir de FS si se hace scroll hacia abajo ---------- */
+  // Salir de pantalla completa al hacer scroll
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 40 && document.fullscreenElement) {
@@ -94,76 +144,19 @@ export default function App() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  /* ---------- Cambiar dato curioso ---------- */
-  const newFact = () => {
-    const next = funFacts[Math.floor(Math.random() * funFacts.length)];
-    setFact(next);
-  };
-
-  /* ---------- Crear estrella ---------- */
-  const spawnStar = () => {
-    const star = document.createElement("div");
-    star.className = "star";
-    star.style.left = `${Math.random() * 100}vw`;
-    star.style.top = `${Math.random() * 100}vh`;
-    document.body.appendChild(star);
-    setTimeout(() => star.remove(), 2000);
-  };
-
-  /* ---------- Activar micrófono ---------- */
-  const enableMic = async () => {
-    const THRESHOLD = 0.18;
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      audioCtx.current = new (window.AudioContext || window.webkitAudioContext)();
-      const source = audioCtx.current.createMediaStreamSource(stream);
-
-      analyser.current = audioCtx.current.createAnalyser();
-      analyser.current.fftSize = 4096;
-      analyser.current.smoothingTimeConstant = 0.7;
-
-      source.connect(analyser.current);
-
-      const bufferLen = analyser.current.fftSize;
-      dataArray.current = new Uint8Array(bufferLen);
-
-      detectInterval.current = setInterval(() => {
-        analyser.current.getByteTimeDomainData(dataArray.current);
-        let sum = 0;
-        for (let i = 0; i < bufferLen; i++) {
-          const v = (dataArray.current[i] - 128) / 128;
-          sum += v * v;
-        }
-        const rms = Math.sqrt(sum / bufferLen);
-        if (rms > THRESHOLD) spawnStar();
-      }, 150);
-    } catch {
-      alert("No se pudo acceder al micrófono.");
-    }
-  };
-
-  /* ---------- Limpieza ---------- */
-  useEffect(() => {
-    return () => {
-      clearInterval(detectInterval.current);
-      audioCtx.current && audioCtx.current.close();
-    };
-  }, []);
-
-  /* ---------- Vista vertical ---------- */
+  // Mostrar aviso si está en vertical
   if (isPortrait) {
     return (
       <div className="orientation-warning">
         <p>
-          🔄 Por favor gira tu dispositivo a <strong>modo horizontal</strong> para una mejor experiencia.
+          🔄 Gira tu dispositivo a <strong>horizontal</strong><br />
+          para la experiencia completa.
         </p>
       </div>
     );
   }
 
-  /* ---------- Vista principal ---------- */
+  // Contenido principal
   return (
     <div className="card">
       <h2>Dato curioso del día 🪐</h2>
@@ -173,8 +166,8 @@ export default function App() {
       <p>{fact}</p>
       <hr className="divider" />
       <p className="small">
-        Para ver estrellas soplando, otorga permiso de micrófono.<br />
-        <strong>El permiso se solicitará cada visita y no se guarda.</strong>
+        Sople al micro para ver estrellas.<br />
+        El permiso se solicita en cada visita.
       </p>
       <button className="button" onClick={enableMic}>
         Activar micrófono 🎤
