@@ -39,6 +39,16 @@ export default function App() {
   const dataArray = useRef(null);
   const detectInterval = useRef(null);
 
+  const toggleFullscreen = () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+    document.body.classList.add("fs-lock");
+  } else {
+    document.exitFullscreen().catch(() => {});
+    document.body.classList.remove("fs-lock");
+  }
+};
+
   // Cambiar dato curioso
   const newFact = () => {
     const next = funFacts[Math.floor(Math.random() * funFacts.length)];
@@ -150,7 +160,7 @@ if (isPortrait) {
 
 // Contenido principal
 return (
-  <div className="card">
+  <div className="card" onDoubleClick={toggleFullscreen}>
     <h2>Dato curioso del día 🪐</h2>
     <button className="button" onClick={newFact}>
       Mostrar otro
@@ -161,16 +171,11 @@ return (
       Sople al micro para ver estrellas.<br />
       El permiso se solicita en cada visita.
     </p>
-    <button
-      className="button"
-      onClick={() => {
-        tryEnterFullscreen();
-        enableMic();
-      }}
-    >
+    <button className="button" onClick={enableMic}>
       Activar micrófono 🎤
     </button>
   </div>
 );
+
 
 }
