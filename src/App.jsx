@@ -1,9 +1,7 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-// import './App.css'
+import { useEffect, useRef, useState } from "react";
 import "./styles.css";
 
+/* ---------- Datos curiosos ---------- */
 const funFacts = [
   "Los pulpos tienen tres corazones.",
   "El 90 % de la población mundial vive en el hemisferio norte.",
@@ -12,7 +10,7 @@ const funFacts = [
   "Saturno flotaría en agua… ¡si cupiera en una bañera lo bastante grande!",
   "Las vacas tienen mejores amigas y se estresan si se separan.",
   "Las huellas de la lengua son únicas, como las dactilares.",
-  "El corazón de una ballena azul puede ser tan grande como un auto pequeño.",
+  "El corazón de una ballena azul puede ser tan grande como un coche pequeño.",
   "Las abejas pueden reconocer rostros humanos.",
   "Los flamencos no nacen rosados; su color viene de su dieta.",
   "Los tiburones existen desde antes que los árboles.",
@@ -20,39 +18,100 @@ const funFacts = [
   "La letra más usada en español es la 'e'.",
   "Los koalas tienen huellas digitales casi idénticas a las humanas.",
   "Los camarones mantis pueden ver 12 colores primarios, los humanos solo 3.",
-  "Hay más posibles combinaciones de una baraja de cartas que átomos en la Tierra.",
-  "El cuerpo humano brilla levemente, pero es 1,000 veces más débil que lo que el ojo puede ver.",
+  "Hay más combinaciones de una baraja que átomos en la Tierra.",
+  "El cuerpo humano brilla débilmente, pero 1 000 × menos de lo visible.",
   "Las cebras son negras con rayas blancas, no al revés.",
-  "Las jirafas solo duermen entre 10 y 20 minutos por vez.",
-  "La nariz humana puede distinguir más de un billón de olores diferentes.",
-  "El ADN humano es un 60 % similar al de un plátano.",
-  "Los árboles pueden comunicarse entre sí a través de redes de hongos en el suelo.",
+  "Las jirafas duermen apenas 10-20 min seguidos.",
+  "La nariz humana distingue más de un billón de olores.",
+  "Compartimos ~60 % del ADN con los plátanos.",
+  "Los árboles se comunican por redes de hongos bajo tierra.",
   "Las estrellas de mar no tienen cerebro ni sangre.",
-  "Las mariposas pueden saborear con sus patas.",
+  "Las mariposas saborean con las patas.",
   "El pez payaso cambia de sexo si la hembra alfa muere.",
-  "La Torre Eiffel puede crecer hasta 15 cm en verano por el calor."
+  "La Torre Eiffel crece hasta 15 cm en verano por dilatación térmica."
 ];
 
-
-function App() {
+/* ---------- Componente principal ---------- */
+export default function App() {
   const [fact, setFact] = useState(funFacts[0]);
+  const audioCtx = useRef(null);
+  const analyser = useRef(null);
+  const dataArray = useRef(null);
+  const detectInterval = useRef(null);
 
-  const getRandomFact = () => {
+  /* Cambia el dato curioso */
+  const newFact = () => {
     const next = funFacts[Math.floor(Math.random() * funFacts.length)];
     setFact(next);
   };
+
+  /* Crea una estrella y la elimina en 2 s */
+  const spawnStar = () => {
+    const star = document.createElement("div");
+    star.className = "star";
+    star.style.left = `${Math.random() * 100}vw`;
+    star.style.top = `${Math.random() * 100}vh`;
+    document.body.appendChild(star);
+    setTimeout(() => star.remove(), 2000);
+  };
+
+  /* ---------- Micrófono & detección de soplidos ---------- */
+  const enableMic = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioCtx.current = new (window.AudioContext || window.webkitAudioContext)();
+      const source = audioCtx.current.createMediaStreamSource(stream);
+      analyser.current = audioCtx.current.createAnalyser();
+      analyser.current.fftSize = 2048;
+      source.connect(analyser.current);
+      const bufferLength = analyser.current.fftSize;
+      dataArray.current = new Uint8Array(bufferLength);
+
+      // Escucha cada 150 ms
+      detectInterval.current = setInterval(() => {
+        analyser.current.getByteTimeDomainData(dataArray.current);
+        // Calcula RMS
+        let sum = 0;
+        for (let i = 0; i < bufferLength; i++) {
+          const v = (dataArray.current[i] - 128) / 128; // normalizado -1..1
+          sum += v * v;
+        }
+        const rms = Math.sqrt(sum / bufferLength);
+        if (rms > 0.25) spawnStar(); // umbral de soplido
+      }, 150);
+    } catch (err) {
+      alert("No se pudo acceder al micrófono.");
+    }
+  };
+
+  /* Limpieza al desmontar */
+  useEffect(() => {
+    return () => {
+      clearInterval(detectInterval.current);
+      audioCtx.current && audioCtx.current.close();
+    };
+  }, []);
 
   return (
     <div className="card">
       <h2>Dato curioso del día 🪐</h2>
 
-      <button className="button" onClick={getRandomFact}>
+      <button className="button" onClick={newFact}>
         Mostrar otro
       </button>
 
       <p>{fact}</p>
+
+      <hr className="divider" />
+
+      <p className="small">
+        Para ver estrellas soplando, otorga permiso de micrófono.<br />
+        <strong>El permiso se solicitará cada visita y no se guarda.</strong>
+      </p>
+
+      <button className="button" onClick={enableMic}>
+        Activar micrófono 🎤
+      </button>
     </div>
   );
 }
-
-export default App;
