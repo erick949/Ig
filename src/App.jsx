@@ -1,6 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import "./styles.css";
 
+const [isPortrait, setIsPortrait] = useState(false);
+
+useEffect(() => {
+  const checkOrientation = () => {
+    const portrait = window.innerHeight > window.innerWidth;
+    setIsPortrait(portrait);
+  };
+
+  checkOrientation();
+  window.addEventListener("resize", checkOrientation);
+  window.addEventListener("orientationchange", checkOrientation);
+
+  return () => {
+    window.removeEventListener("resize", checkOrientation);
+    window.removeEventListener("orientationchange", checkOrientation);
+  };
+}, []);
+
+
 /* ---------- Datos curiosos ---------- */
 const funFacts = [
   "Los pulpos tienen tres corazones.",
@@ -104,6 +123,14 @@ export default function App() {
       audioCtx.current && audioCtx.current.close();
     };
   }, []);
+
+  if (isPortrait) {
+    return (
+      <div className="orientation-warning">
+        <p>🔄 Por favor gira tu dispositivo a <strong>modo horizontal</strong> para una mejor experiencia.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="card">
