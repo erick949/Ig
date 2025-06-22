@@ -57,32 +57,45 @@ export default function App() {
 
   /* ---------- Micrófono & detección de soplidos ---------- */
   const enableMic = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      audioCtx.current = new (window.AudioContext || window.webkitAudioContext)();
-      const source = audioCtx.current.createMediaStreamSource(stream);
-      analyser.current = audioCtx.current.createAnalyser();
-      analyser.current.fftSize = 2048;
-      source.connect(analyser.current);
-      const bufferLength = analyser.current.fftSize;
-      dataArray.current = new Uint8Array(bufferLength);
+  const THRESHOLD = 0.18; // menor valor = más sensibilidad
 
-      // Escucha cada 150 ms
-      detectInterval.current = setInterval(() => {
-        analyser.current.getByteTimeDomainData(dataArray.current);
-        // Calcula RMS
-        let sum = 0;
-        for (let i = 0; i < bufferLength; i++) {
-          const v = (dataArray.current[i] - 128) / 128; // normalizado -1..1
-          sum += v * v;
-        }
-        const rms = Math.sqrt(sum / bufferLength);
-        if (rms > 0.25) spawnStar(); // umbral de soplido
-      }, 150);
-    } catch (err) {
-      alert("No se pudo acceder al micrófono.");
-    }
-  };
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    // Crear contexto de audio y nodos
+    audioCtx.current = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioCtx.current.createMediaStreamSource(stream);
+
+    analyser.current = audioCtx.current.createAnalyser();
+    analyser.current.fftSize = 4096; // mayor resolución
+    analyser.current.smoothingTimeConstant = 0.7; // suavizado
+
+    source.connect(analyser.current);
+
+    const bufferLength = analyser.current.fftSize;
+    dataArray.current = new Uint8Array(bufferLength);
+
+    // Verifica el volumen cada 150 ms
+    detectInterval.current = setInterval(() => {
+      analyser.current.getByteTimeDomainData(dataArray.current);
+
+      let sum = 0;
+      for (let i = 0; i < bufferLength; i++) {
+        const v = (dataArray.current[i] - 128) / 128;
+        sum += v * v;
+      }
+
+      const rms = Math.sqrt(sum / bufferLength);
+
+      if (rms > THRESHOLD) {
+        spawnStar();
+      }
+    }, 150);
+  } catch (err) {
+    alert("No se pudo acceder al micrófono.");
+  }
+};
+
 
   /* Limpieza al desmontar */
   useEffect(() => {
