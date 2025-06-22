@@ -1,23 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import "./styles.css";
 
-const [isPortrait, setIsPortrait] = useState(false);
 
-useEffect(() => {
-  const checkOrientation = () => {
-    const portrait = window.innerHeight > window.innerWidth;
-    setIsPortrait(portrait);
-  };
-
-  checkOrientation();
-  window.addEventListener("resize", checkOrientation);
-  window.addEventListener("orientationchange", checkOrientation);
-
-  return () => {
-    window.removeEventListener("resize", checkOrientation);
-    window.removeEventListener("orientationchange", checkOrientation);
-  };
-}, []);
 
 
 /* ---------- Datos curiosos ---------- */
@@ -53,10 +37,33 @@ const funFacts = [
 /* ---------- Componente principal ---------- */
 export default function App() {
   const [fact, setFact] = useState(funFacts[0]);
+  const [isPortrait, setIsPortrait] = useState(false);
   const audioCtx = useRef(null);
   const analyser = useRef(null);
   const dataArray = useRef(null);
   const detectInterval = useRef(null);
+
+  /* ---------- Verifica orientación ---------- */
+  useEffect(() => {
+    const checkOrientation = () => {
+      const portrait = window.innerHeight > window.innerWidth;
+      setIsPortrait(portrait);
+    };
+
+    checkOrientation(); // al cargar
+
+    window.addEventListener("resize", checkOrientation);
+    window.addEventListener("orientationchange", checkOrientation);
+
+    return () => {
+      window.removeEventListener("resize", checkOrientation);
+      window.removeEventListener("orientationchange", checkOrientation);
+    };
+  }, []);
+
+
+
+  
 
   /* Cambia el dato curioso */
   const newFact = () => {
