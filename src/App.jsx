@@ -93,85 +93,84 @@ export default function App() {
       audioCtx.current && audioCtx.current.close();
     };
   }, []);
+// Detectar orientación
+useEffect(() => {
+  const checkOrientation = () => {
+    const portrait = window.innerHeight > window.innerWidth;
+    setIsPortrait(portrait);
+  };
 
-  // Detectar orientación
-  useEffect(() => {
-    const checkOrientation = () => {
-      const portrait = window.innerHeight > window.innerWidth;
-      setIsPortrait(portrait);
-    };
-    checkOrientation();
-    window.addEventListener("resize", checkOrientation);
-    window.addEventListener("orientationchange", checkOrientation);
-    return () => {
-      window.removeEventListener("resize", checkOrientation);
-      window.removeEventListener("orientationchange", checkOrientation);
-    };
-  }, []);
+  checkOrientation();
+  window.addEventListener("resize", checkOrientation);
+  window.addEventListener("orientationchange", checkOrientation);
 
-  // Pantalla completa automática en horizontal
-  useEffect(() => {
-    const enterFS = async () => {
-      try {
-        if (!document.fullscreenElement) {
-          await document.documentElement.requestFullscreen();
-          document.body.classList.add("fs-lock");
-        }
-      } catch (_) {}
-    };
-    const exitFS = () => {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-        document.body.classList.remove("fs-lock");
-      }
-    };
-    if (isPortrait) {
-      exitFS();
-    } else {
-      enterFS();
-    }
-  }, [isPortrait]);
+  return () => {
+    window.removeEventListener("resize", checkOrientation);
+    window.removeEventListener("orientationchange", checkOrientation);
+  };
+}, []);
 
-  // Salir de pantalla completa al hacer scroll
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 40 && document.fullscreenElement) {
-        document.exitFullscreen();
-        document.body.classList.remove("fs-lock");
-      }
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  // Mostrar aviso si está en vertical
-  if (isPortrait) {
-    return (
-      <div className="orientation-warning">
-        <p>
-          🔄 Gira tu dispositivo a <strong>horizontal</strong><br />
-          para la experiencia completa.
-        </p>
-      </div>
-    );
+// Funciones para pantalla completa
+const tryEnterFullscreen = () => {
+  if (!document.fullscreenElement && !isPortrait) {
+    document.documentElement.requestFullscreen().catch(() => {});
+    document.body.classList.add("fs-lock");
   }
+};
 
-  // Contenido principal
+const exitFullscreen = () => {
+  if (document.fullscreenElement) {
+    document.exitFullscreen().catch(() => {});
+    document.body.classList.remove("fs-lock");
+  }
+};
+
+// Salir de pantalla completa al hacer scroll
+useEffect(() => {
+  const handleScroll = () => {
+    if (window.scrollY > 40) {
+      exitFullscreen();
+    }
+  };
+  window.addEventListener("scroll", handleScroll);
+  return () => window.removeEventListener("scroll", handleScroll);
+}, []);
+
+// Mostrar aviso si está en vertical
+if (isPortrait) {
   return (
-    <div className="card">
-      <h2>Dato curioso del día 🪐</h2>
-      <button className="button" onClick={newFact}>
-        Mostrar otro
-      </button>
-      <p>{fact}</p>
-      <hr className="divider" />
-      <p className="small">
-        Sople al micro para ver estrellas.<br />
-        El permiso se solicita en cada visita.
+    <div className="orientation-warning">
+      <p>
+        🔄 Gira tu dispositivo a <strong>horizontal</strong><br />
+        para la experiencia completa.
       </p>
-      <button className="button" onClick={enableMic}>
-        Activar micrófono 🎤
-      </button>
     </div>
   );
+}
+
+// Contenido principal
+return (
+  <div className="card">
+    <h2>Dato curioso del día 🪐</h2>
+    <button className="button" onClick={newFact}>
+      Mostrar otro
+    </button>
+    <p>{fact}</p>
+    <hr className="divider" />
+    <p className="small">
+      Sople al micro para ver estrellas.<br />
+      El permiso se solicita en cada visita.
+    </p>
+    <button
+      className="button"
+      onClick={() => {
+        tryEnterFullscreen();
+        enableMic();
+      }}
+    >
+      Activar micrófono 🎤
+    </button>
+  </div>
+);
+
 }
