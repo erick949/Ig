@@ -1,9 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import "./styles.css";
 
-
-
-
 /* ---------- Datos curiosos ---------- */
 const funFacts = [
   "Los pulpos tienen tres corazones.",
@@ -43,15 +40,14 @@ export default function App() {
   const dataArray = useRef(null);
   const detectInterval = useRef(null);
 
-  /* ---------- Verifica orientación ---------- */
+  /* ---------- Detectar orientación ---------- */
   useEffect(() => {
     const checkOrientation = () => {
       const portrait = window.innerHeight > window.innerWidth;
       setIsPortrait(portrait);
     };
 
-    checkOrientation(); // al cargar
-
+    checkOrientation();
     window.addEventListener("resize", checkOrientation);
     window.addEventListener("orientationchange", checkOrientation);
 
@@ -61,17 +57,50 @@ export default function App() {
     };
   }, []);
 
+  /* ---------- Pantalla completa según orientación ---------- */
+  useEffect(() => {
+    const enterFS = async () => {
+      try {
+        if (!document.fullscreenElement) {
+          await document.documentElement.requestFullscreen();
+          document.body.classList.add("fs-lock");
+        }
+      } catch (_) {}
+    };
 
+    const exitFS = () => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+        document.body.classList.remove("fs-lock");
+      }
+    };
 
-  
+    if (isPortrait) {
+      exitFS();
+    } else {
+      enterFS();
+    }
+  }, [isPortrait]);
 
-  /* Cambia el dato curioso */
+  /* ---------- Salir de FS si se hace scroll hacia abajo ---------- */
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 40 && document.fullscreenElement) {
+        document.exitFullscreen();
+        document.body.classList.remove("fs-lock");
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  /* ---------- Cambiar dato curioso ---------- */
   const newFact = () => {
     const next = funFacts[Math.floor(Math.random() * funFacts.length)];
     setFact(next);
   };
 
-  /* Crea una estrella y la elimina en 2 s */
+  /* ---------- Crear estrella ---------- */
   const spawnStar = () => {
     const star = document.createElement("div");
     star.className = "star";
@@ -81,49 +110,41 @@ export default function App() {
     setTimeout(() => star.remove(), 2000);
   };
 
-  /* ---------- Micrófono & detección de soplidos ---------- */
+  /* ---------- Activar micrófono ---------- */
   const enableMic = async () => {
-  const THRESHOLD = 0.18; // menor valor = más sensibilidad
+    const THRESHOLD = 0.18;
 
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-    // Crear contexto de audio y nodos
-    audioCtx.current = new (window.AudioContext || window.webkitAudioContext)();
-    const source = audioCtx.current.createMediaStreamSource(stream);
+      audioCtx.current = new (window.AudioContext || window.webkitAudioContext)();
+      const source = audioCtx.current.createMediaStreamSource(stream);
 
-    analyser.current = audioCtx.current.createAnalyser();
-    analyser.current.fftSize = 4096; // mayor resolución
-    analyser.current.smoothingTimeConstant = 0.7; // suavizado
+      analyser.current = audioCtx.current.createAnalyser();
+      analyser.current.fftSize = 4096;
+      analyser.current.smoothingTimeConstant = 0.7;
 
-    source.connect(analyser.current);
+      source.connect(analyser.current);
 
-    const bufferLength = analyser.current.fftSize;
-    dataArray.current = new Uint8Array(bufferLength);
+      const bufferLen = analyser.current.fftSize;
+      dataArray.current = new Uint8Array(bufferLen);
 
-    // Verifica el volumen cada 150 ms
-    detectInterval.current = setInterval(() => {
-      analyser.current.getByteTimeDomainData(dataArray.current);
+      detectInterval.current = setInterval(() => {
+        analyser.current.getByteTimeDomainData(dataArray.current);
+        let sum = 0;
+        for (let i = 0; i < bufferLen; i++) {
+          const v = (dataArray.current[i] - 128) / 128;
+          sum += v * v;
+        }
+        const rms = Math.sqrt(sum / bufferLen);
+        if (rms > THRESHOLD) spawnStar();
+      }, 150);
+    } catch {
+      alert("No se pudo acceder al micrófono.");
+    }
+  };
 
-      let sum = 0;
-      for (let i = 0; i < bufferLength; i++) {
-        const v = (dataArray.current[i] - 128) / 128;
-        sum += v * v;
-      }
-
-      const rms = Math.sqrt(sum / bufferLength);
-
-      if (rms > THRESHOLD) {
-        spawnStar();
-      }
-    }, 150);
-  } catch (err) {
-    alert("No se pudo acceder al micrófono.");
-  }
-};
-
-
-  /* Limpieza al desmontar */
+  /* ---------- Limpieza ---------- */
   useEffect(() => {
     return () => {
       clearInterval(detectInterval.current);
@@ -131,31 +152,30 @@ export default function App() {
     };
   }, []);
 
+  /* ---------- Vista vertical ---------- */
   if (isPortrait) {
     return (
       <div className="orientation-warning">
-        <p>🔄 Por favor gira tu dispositivo a <strong>modo horizontal</strong> para una mejor experiencia.</p>
+        <p>
+          🔄 Por favor gira tu dispositivo a <strong>modo horizontal</strong> para una mejor experiencia.
+        </p>
       </div>
     );
   }
 
+  /* ---------- Vista principal ---------- */
   return (
     <div className="card">
       <h2>Dato curioso del día 🪐</h2>
-
       <button className="button" onClick={newFact}>
         Mostrar otro
       </button>
-
       <p>{fact}</p>
-
       <hr className="divider" />
-
       <p className="small">
         Para ver estrellas soplando, otorga permiso de micrófono.<br />
         <strong>El permiso se solicitará cada visita y no se guarda.</strong>
       </p>
-
       <button className="button" onClick={enableMic}>
         Activar micrófono 🎤
       </button>
