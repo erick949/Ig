@@ -13,11 +13,33 @@ export default function App() {
   const [showNext, setShowNext] = useState(false);          // ⬅️ controla la vista nueva
   const isPortrait = useOrientation();
 
+  
+
   /* ---------- Temporizador para cambiar de vista ---------- */
-  useEffect(() => {
-    const timer = setTimeout(() => setShowNext(true), 10_000); // 10 s
-    return () => clearTimeout(timer);
-  }, []);
+  /* ---------- Temporizador para cambiar de vista y doble clic global ---------- */
+useEffect(() => {
+  // Cambiar a CakeView después de 10 segundos
+  const timer = setTimeout(() => setShowNext(true), 10_000);
+
+  // Escuchar doble clic global para alternar pantalla completa
+  const handleDoubleClick = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+      document.body.classList.add("fs-lock");
+    } else {
+      document.exitFullscreen().catch(() => {});
+      document.body.classList.remove("fs-lock");
+    }
+  };
+
+  document.addEventListener("dblclick", handleDoubleClick);
+
+  return () => {
+    clearTimeout(timer);
+    document.removeEventListener("dblclick", handleDoubleClick);
+  };
+}, []);
+
 
   /* ---------- Estrellas ---------- */
   const spawnStar = () => {
@@ -46,7 +68,7 @@ export default function App() {
 
   /* ---------- Vista principal (inicial) ---------- */
   return (
-  <div className="app-root" onDoubleClick={toggleFullscreen}>
+  <div className="app-root" >
     {isPortrait ? (
       <OrientationAlert />
     ) : showNext ? (
