@@ -89,9 +89,8 @@ function DecoracionCircular({ cantidad = 10, radius = 1.25, y = 1.25 }) {
     </group>
   );
 }
-
-function TextoCurvado({ text, radius = 1.7, y = -1, fontSize = 0.1 }) {
-  const arc = Math.PI/2*2; // media circunferencia
+function TextoCurvado({ text, radius = 1, y = -1, fontSize = 0.1 }) {
+  const arc = Math.PI / 2;
   const step = arc / (text.length - 1);
 
   return (
@@ -100,31 +99,35 @@ function TextoCurvado({ text, radius = 1.7, y = -1, fontSize = 0.1 }) {
         const angle = -arc / 2 + i * step;
         const x = Math.sin(angle) * radius;
         const z = Math.cos(angle) * radius;
-        const rotY = -angle;
+        const rotY = -angle + 2.9;
+
+        const rotX = 3.2;
+        const rotZ = 3.2;
 
         return (
-          <Text3D
-            key={i}
-            position={[x, 0, z]}
-            rotation={[0, rotY, 0]}
-            fontSize={fontSize}
-            height={0.05}
-            curveSegments={12}
-            bevelEnabled
-            bevelThickness={0.01}
-            bevelSize={0.005}
-            bevelSegments={5}
-            // public\models\fonts\helvetiker_regular.typeface.json
-            font="/fonts/helvetiker_regular.typeface.json" // Asegúrate de tener esta fuente en /public/fonts
-          >
-            {char}
-            <meshStandardMaterial color="white" />
-          </Text3D>
+          <group key={i} scale={[fontSize, fontSize, fontSize]}>
+            <Text3D
+              position={[x / fontSize, 0, z / fontSize]}
+              rotation={[rotX, rotY, rotZ]}
+              height={0.09}
+              curveSegments={12}
+              bevelEnabled
+              bevelThickness={0.01}
+              bevelSize={0.005}
+              bevelSegments={5}
+              font="/fonts/helvetiker_regular.typeface.json"
+            >
+              {char}
+              <meshStandardMaterial color="white" />
+            </Text3D>
+          </group>
         );
       })}
     </group>
   );
 }
+
+
 
 // export default function CakeView() {
   export default function CakeView({ velasEncendidas }) {
@@ -142,7 +145,9 @@ function TextoCurvado({ text, radius = 1.7, y = -1, fontSize = 0.1 }) {
         <DecoracionCircular cantidad={11} radius={1} y={-0.2} />
 
 
-        <TextoCurvado text="NOELLE" y={-1.2}  />
+
+        <TextoCurvado text="NADHEA" radius={1.54} y={-1.3} fontSize={0.5} />
+
 
         <Text3D
           position={[-5, 1.2, 0]}
