@@ -46,19 +46,22 @@ export default function App() {
 
   /* ---------- Vista principal (inicial) ---------- */
   return (
-    <div onDoubleClick={toggleFullscreen}>
-      {showNext ? (
-        <CakeView />
-      ) : (
-        <FactCard
-          fact={fact}
-          onNewFact={() =>
-            setFact(funFacts[Math.floor(Math.random() * funFacts.length)])
-          }
-          onEnableMic={() => enableMic(spawnStar)}
-        />
-      )}
-    </div>
-  );
+  <div className="app-root" onDoubleClick={toggleFullscreen}>
+    {isPortrait ? (
+      <OrientationAlert />
+    ) : showNext ? (
+      <CakeView />
+    ) : (
+      <FactCard
+        fact={fact}
+        onNewFact={() =>
+          setFact(funFacts[Math.floor(Math.random() * funFacts.length)])
+        }
+        onEnableMic={() => enableMic(spawnStar)}
+      />
+    )}
+  </div>
+);
+
 
 }

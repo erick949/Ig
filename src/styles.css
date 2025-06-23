@@ -125,3 +125,11 @@ body {
   padding: 20px;
   box-sizing: border-box;
 }
+.app-root {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
