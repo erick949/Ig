@@ -6,42 +6,37 @@ import { enableMic } from "./utils/mic";
 import { toggleFullscreen, exitFullscreen } from "./utils/fullscreen";
 import FactCard from "./components/FactCard";
 import OrientationAlert from "./components/OrientationAlert";
-import CakeView  from "./components/CakeView";   // ⬅️ nuevo import
+import CakeView from "./components/CakeView";
 
 export default function App() {
   const [fact, setFact] = useState(funFacts[0]);
-  const [showNext, setShowNext] = useState(false);          // ⬅️ controla la vista nueva
+  const [showNext, setShowNext] = useState(false);
+  const [velasEncendidas, setVelasEncendidas] = useState(true); // 🕯️ Estado de velas
   const isPortrait = useOrientation();
 
-  
+  // Cambiar a CakeView después de 5 segundos y manejar doble clic para FS
+  useEffect(() => {
+    const timer = setTimeout(() => setShowNext(true), 5_000);
 
-  /* ---------- Temporizador para cambiar de vista ---------- */
-  /* ---------- Temporizador para cambiar de vista y doble clic global ---------- */
-useEffect(() => {
-  // Cambiar a CakeView después de 10 segundos
-  const timer = setTimeout(() => setShowNext(true), 10_000);
+    const handleDoubleClick = () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+        document.body.classList.add("fs-lock");
+      } else {
+        document.exitFullscreen().catch(() => {});
+        document.body.classList.remove("fs-lock");
+      }
+    };
 
-  // Escuchar doble clic global para alternar pantalla completa
-  const handleDoubleClick = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-      document.body.classList.add("fs-lock");
-    } else {
-      document.exitFullscreen().catch(() => {});
-      document.body.classList.remove("fs-lock");
-    }
-  };
+    document.addEventListener("dblclick", handleDoubleClick);
 
-  document.addEventListener("dblclick", handleDoubleClick);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("dblclick", handleDoubleClick);
+    };
+  }, []);
 
-  return () => {
-    clearTimeout(timer);
-    document.removeEventListener("dblclick", handleDoubleClick);
-  };
-}, []);
-
-
-  /* ---------- Estrellas ---------- */
+  // Estrellas animadas
   const spawnStar = () => {
     const star = document.createElement("div");
     star.className = "star";
@@ -51,7 +46,7 @@ useEffect(() => {
     setTimeout(() => star.remove(), 2000);
   };
 
-  /* ---------- Salir de FS al hacer scroll ---------- */
+  // Salir de FS al hacer scroll
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 40) exitFullscreen();
@@ -60,30 +55,25 @@ useEffect(() => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  /* ---------- Orientación vertical ---------- */
+  // Orientación incorrecta
   if (isPortrait) return <OrientationAlert />;
 
-  /* ---------- Vista posterior (después de 10 s) ---------- */
-  if (showNext) return <CakeView  />;
+  // Vista posterior (con pastel)
+  if (showNext) return <CakeView velasEncendidas={velasEncendidas} />;
 
-  /* ---------- Vista principal (inicial) ---------- */
+  // Vista inicial (tarjeta)
   return (
-  <div className="app-root" >
-    {isPortrait ? (
-      <OrientationAlert />
-    ) : showNext ? (
-      <CakeView />
-    ) : (
+    <div className="app-root">
       <FactCard
         fact={fact}
         onNewFact={() =>
           setFact(funFacts[Math.floor(Math.random() * funFacts.length)])
         }
-        onEnableMic={() => enableMic(spawnStar)}
+        onEnableMic={() => {
+          enableMic(spawnStar);
+          setVelasEncendidas((prev) => !prev); // 🔥 Encender/apagar velas
+        }}
       />
-    )}
-  </div>
-);
-
-
+    </div>
+  );
 }

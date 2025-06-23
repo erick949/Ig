@@ -37,7 +37,9 @@ function Vela({ position, encendida = true }) {
     </group>
   );
 }
-export  function Pastel() {
+// export  function Pastel() {
+export function Pastel({ encendidas }) {
+
   const velas = [
     { x: -0.4, z: -0.4 },
     { x: 0.4, z: -0.4 },
@@ -60,7 +62,8 @@ export  function Pastel() {
 
       {/* Velas */}
       {velas.map((pos, idx) => (
-        <Vela key={idx} position={[pos.x, 1.5, pos.z]} encendida={true} />
+        // <Vela key={idx} position={[pos.x, 1.5, pos.z]} encendida={true} />
+        <Vela key={idx} position={[pos.x, 1.5, pos.z]} encendida={encendidas} />
       ))}
     </group>
   );
@@ -123,7 +126,9 @@ function TextoCurvado({ text, radius = 1.7, y = -1, fontSize = 0.1 }) {
   );
 }
 
-export default function CakeView() {
+// export default function CakeView() {
+  export default function CakeView({ velasEncendidas }) {
+
   return (
     <div style={{ width: "100vw", height: "100vh", backgroundColor: "#6b21a8" }}>
       <Canvas camera={{ position: [0, 4, 9], fov: 30 }}>
@@ -131,7 +136,9 @@ export default function CakeView() {
         <directionalLight position={[5, 5, 5]} intensity={1} />
         <OrbitControls enableZoom={false} />
 
-        <Pastel />
+        {/* <Pastel /> */}
+        <Pastel encendidas={velasEncendidas} />
+
         <DecoracionCircular cantidad={11} radius={1} y={-0.2} />
 
 
