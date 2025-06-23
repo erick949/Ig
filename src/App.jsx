@@ -69,9 +69,12 @@ export default function App() {
         onNewFact={() =>
           setFact(funFacts[Math.floor(Math.random() * funFacts.length)])
         }
+        // enableMic(() => setVelasEncendidas((prev) => !prev));
         onEnableMic={() => {
-          enableMic(spawnStar);
-          setVelasEncendidas((prev) => !prev); // 🔥 Encender/apagar velas
+          enableMic(() => {
+            spawnStar();
+            setVelasEncendidas((prev) => !prev);
+          });
         }}
       />
     </div>
