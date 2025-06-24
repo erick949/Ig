@@ -8,6 +8,8 @@ import FactCard from "./components/FactCard";
 import OrientationAlert from "./components/OrientationAlert";
 import CakeView from "./components/CakeView";
 
+
+
 export default function App() {
   const [fact, setFact] = useState(funFacts[0]);
   const [showNext, setShowNext] = useState(false);

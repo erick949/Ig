@@ -2,6 +2,10 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Text3D } from "@react-three/drei";
 import React, { useState } from "react";
 import { useSpring, a } from "@react-spring/three";
+import ConfettiParticles from "./ConfettiParticles";
+import GiftBox from "./GiftBox";
+import Carta from "./Carta";
+
 
 
 function Vela({ position, encendida = true }) {
@@ -59,6 +63,19 @@ export function Pastel({ encendidas }) {
         <cylinderGeometry args={[1.2, 1.2, 0.5, 32]} />
         <meshStandardMaterial color="#fcd34d" />
       </mesh>
+
+      {/* // Base del pastel (plato) */}
+      <mesh position={[0, -0.2, 0]}>
+        <cylinderGeometry args={[2, 2, 0.1, 32]} />
+        <meshStandardMaterial color="#d4d4d4" metalness={0.5} roughness={0.3} />
+      </mesh>
+
+      {/* Caja de regalos */}
+      <GiftBox position={[3, 0, 0]} size={1} />
+
+      <Carta position={[-3, 0, 0]} folded={false} />
+
+
 
       {/* Velas */}
       {velas.map((pos, idx) => (
@@ -148,6 +165,9 @@ function TextoCurvado({ text, radius = 1, y = -1, fontSize = 0.1 }) {
 
         <TextoCurvado text="NADHEA" radius={1.54} y={-1.3} fontSize={0.5} />
 
+        <ConfettiParticles count={150} />
+
+        
 
         <Text3D
           position={[-5, 1.2, 0]}
