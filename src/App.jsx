@@ -77,8 +77,9 @@ export default function App() {
             spawnStar();
             // setVelasEncendidas((prev) => !prev);
             // Esperar 5 segundos y luego cambiar la vista
-            setTimeout(() => setShowNext(true), 5000);
+           
           });
+           setTimeout(() => setShowNext(true), 5000);
         }}
       />
     </div>
