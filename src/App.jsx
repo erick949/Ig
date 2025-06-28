@@ -16,9 +16,9 @@ export default function App() {
   const [velasEncendidas, setVelasEncendidas] = useState(true); // 🕯️ Estado de velas
   const isPortrait = useOrientation();
 
-  // Cambiar a CakeView después de 5 segundos y manejar doble clic para FS
+  // Cambiar a CakeView Presionar el boton de continuar <<instrucciones
   useEffect(() => {
-    const timer = setTimeout(() => setShowNext(true), 5_000);
+    // const timer = setTimeout(() => setShowNext(true), 5_000);
 
     const handleDoubleClick = () => {
       if (!document.fullscreenElement) {
@@ -75,7 +75,9 @@ export default function App() {
         onEnableMic={() => {
           enableMic(() => {
             spawnStar();
-            setVelasEncendidas((prev) => !prev);
+            // setVelasEncendidas((prev) => !prev);
+            // Esperar 5 segundos y luego cambiar la vista
+            setTimeout(() => setShowNext(true), 5000);
           });
         }}
       />
