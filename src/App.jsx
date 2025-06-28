@@ -18,7 +18,7 @@ export default function App() {
 
   // Cambiar a CakeView Presionar el boton de continuar <<instrucciones
   useEffect(() => {
-    // const timer = setTimeout(() => setShowNext(true), 5_000);
+    const timer = setTimeout(() => setShowNext(true), 5_000);
 
     const handleDoubleClick = () => {
       if (!document.fullscreenElement) {
@@ -77,7 +77,7 @@ export default function App() {
             spawnStar();
             // setVelasEncendidas((prev) => !prev);
             // Esperar 5 segundos y luego cambiar la vista
-            setShowNext(true);
+            // setShowNext(true);
           });
           
         }}
